@@ -39,18 +39,17 @@ public class item {
 	
 	@NotEmpty
 	@NotNull
-	String image,description;
+	String description;
 	
 	boolean took;
 	public item() {}
 
-	public item(@NotEmpty @NotNull String name, Category category, user author, @NotEmpty @NotNull String image,
+	public item(@NotEmpty @NotNull String name, Category category, user author,
 			@NotEmpty @NotNull String description, boolean took ) {
 		super();
 		this.name = name;
 		this.category = category;
 		this.author = author;
-		this.image = image;
 		this.description = description;
 		this.took = took;
 		this.author=author;
@@ -88,14 +87,7 @@ public class item {
 		this.author = author;
 	}
 
-	public String getImage() {
-		return image;
-	}
-
-	public void setImage(String image) {
-		this.image = image;
-	}
-
+	
 	public String getDescription() {
 		return description;
 	}

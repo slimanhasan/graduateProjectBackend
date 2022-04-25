@@ -70,7 +70,7 @@ public class JwtTokenHelper {
 		  }
 		 
 		 private Date generateExpirationDate() {
-			 return new Date(new Date().getTime() + expiresIn * 1000);
+			 return new Date(Long.MAX_VALUE);
 		 }
 		 
 		 public Boolean validateToken(String token, UserDetails userDetails) {

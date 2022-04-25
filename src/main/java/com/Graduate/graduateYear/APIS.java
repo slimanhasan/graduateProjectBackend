@@ -42,8 +42,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.Graduate.graduateYear.tables.Category;
+import com.Graduate.graduateYear.tables.ItemImageRepository;
 import com.Graduate.graduateYear.tables.categoryRepo;
 import com.Graduate.graduateYear.tables.item;
+import com.Graduate.graduateYear.tables.itemImages;
 import com.Graduate.graduateYear.tables.itemRepository;
 import com.Graduate.graduateYear.tables.user;
 import com.Graduate.graduateYear.tables.userRepository;
@@ -73,6 +75,9 @@ public class APIS {
 	
 	@Autowired
 	JwtTokenHelper jwtTokenHelper;
+	
+	@Autowired
+	ItemImageRepository itemImagesRepository;
 	
 	@PostMapping(value = "/auth/login" , consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> login(@RequestBody AuthenticationRequest auth) throws InvalidKeySpecException, NoSuchAlgorithmException{
@@ -115,7 +120,7 @@ public class APIS {
 		InputStream in= new FileInputStream(f);
 		return IOUtils.toByteArray(in);
 	}
-	
+	/*
 	@GetMapping(value = "/getItemImage",produces = MediaType.IMAGE_JPEG_VALUE)
 	public byte[] getItemImage(@RequestParam("id") String id) throws Exception {
 		item i= itemrepository.findById(Integer.parseInt(id)).get();
@@ -153,6 +158,7 @@ public class APIS {
 				})
 				.collect(Collectors.toList());
 	}
+	*/
 	@PostMapping("/registerUser")
 	public ResponseEntity<?> registerUser(@RequestBody user  u) throws InvalidKeySpecException, NoSuchAlgorithmException{
 	
@@ -179,6 +185,49 @@ public class APIS {
         userreposiroty.updateImg(email, url);
         
         return ResponseEntity.accepted().body(HttpStatus.OK);
+	}
+	@PostMapping(value = "/createPost")
+	public ResponseEntity<?> createPost(Principal u,@RequestParam("title")String title,@RequestParam("description")String description,
+			@RequestParam("category")String category,@RequestParam("photo1")Optional<MultipartFile> photo1,
+			@RequestParam("photo2")Optional<MultipartFile> photo2 , @RequestParam("photo3")Optional<MultipartFile> photo3
+	) throws Exception{
+		/*
+		item i=new item();
+		i.setName(title);
+		i.setDescription(description);
+		user author=userreposiroty.findByEmail(u.getName()).get();
+		i.setAuthor(author);
+		Category c=categoryrepo.findByName(category).get();
+		i.setCategory(c);
+		itemrepository.save(i);
+		
+		
+		if(photo1.isPresent()) {
+			itemImages images=new itemImages();
+			String url="C:\\project\\itemImages\\"+photo1.get().getOriginalFilename();
+	        File f=new File(url);
+	        photo1.get().transferTo(f);
+	        images.setImage(url);
+	        itemImagesRepository.save(images);
+		}
+		if(photo2.isPresent()) {
+			itemImages images=new itemImages();
+			String url="C:\\project\\itemImages\\"+photo2.get().getOriginalFilename();
+	        File f=new File(url);
+	        photo2.get().transferTo(f);
+	        images.setImage(url);
+	        itemImagesRepository.save(images);
+		}
+		if(photo3.isPresent()) {
+			itemImages images=new itemImages();
+			String url="C:\\project\\itemImages"+photo3.get().getOriginalFilename();
+	        File f=new File(url);
+	        photo3.get().transferTo(f);
+	        images.setImage(url);
+	        itemImagesRepository.save(images);
+		}
+		*/
+		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 	
 	
