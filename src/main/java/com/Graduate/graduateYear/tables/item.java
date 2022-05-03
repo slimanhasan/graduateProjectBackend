@@ -1,5 +1,8 @@
 package com.Graduate.graduateYear.tables;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -11,7 +14,6 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.validation.annotation.Validated;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Validated
@@ -25,13 +27,11 @@ public class item {
 	@NotNull
 	String name;
 	
-	@JsonBackReference
 	@NotNull
 	@OneToOne()
 	Category category;
 	
 	
-	@JsonBackReference
 	@NotNull
 	@OneToOne()
 	user author;
@@ -42,7 +42,13 @@ public class item {
 	String description;
 	
 	boolean took;
-	public item() {}
+	
+	
+	Date postDate;
+	
+	public item() {
+		postDate=new Date();
+	}
 
 	public item(@NotEmpty @NotNull String name, Category category, user author,
 			@NotEmpty @NotNull String description, boolean took ) {
@@ -53,6 +59,7 @@ public class item {
 		this.description = description;
 		this.took = took;
 		this.author=author;
+		this.postDate=new Date();
 	}
 
 	public int getId() {
@@ -103,6 +110,15 @@ public class item {
 	public void setTook(boolean took) {
 		this.took = took;
 	}
+
+	public Date getPostDate() {
+		return postDate;
+	}
+
+	public void setPostDate(Date postDate) {
+		this.postDate = postDate;
+	}
+	
 	
 	
 	

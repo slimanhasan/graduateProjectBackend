@@ -49,10 +49,13 @@ public class securityConfigurations extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().exceptionHandling()
 		.authenticationEntryPoint(authenticationEntryPoint).and()
-		.authorizeRequests((request) -> request.antMatchers( "/auth/login","/getCategories",
-				"/getItems/**","/getCategoryImage",
-				"/getItemImage","/registerUser"
-				,"/setUserImage","/test")
+		.authorizeRequests((request) -> request.antMatchers(
+				"/auth/login","/getCategories"
+				,"/getItems/**","/getCategoryImage"
+				,"/getItemImage","/registerUser"
+				,"/setUserImage","/test"
+				,"/getPostPhotos","/getNumberOfPhotosForItem"
+				,"/getPersonalPageData")
 				.permitAll()
 				.antMatchers(HttpMethod.OPTIONS, "/**").permitAll().anyRequest().authenticated())
 		.addFilterBefore(new JwtAuthenticationFilter(userService, jwtTokenHelper),

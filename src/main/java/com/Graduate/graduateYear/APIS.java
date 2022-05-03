@@ -3,6 +3,7 @@ package com.Graduate.graduateYear;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpRequest;
@@ -12,6 +13,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -129,36 +131,34 @@ public class APIS {
 		InputStream in= new FileInputStream(f);
 		return IOUtils.toByteArray(in);
 	}
-	
+	*/	
 	@GetMapping("/getItems/{categoryName}")
 	public List<item> getItemsOfCategory(@PathVariable String categoryName,@RequestParam("q") Optional<String>word){
 
 		
 		List<item>l;
 		if(word.isPresent()) {
-			l=itemrepository.findItemsWithPartOfNameAndCategory(word.get(),categoryrepo.findByName(categoryName));
+			l=itemrepository.findItemsWithPartOfNameAndCategory(word.get(),categoryrepo.findByName(categoryName).get());
 		}
 		else {
-			l=itemrepository.findByCategory(categoryrepo.findByName(categoryName));
+			l=itemrepository.findByCategory(categoryrepo.findByName(categoryName).get());
 		}
-		return l
-				.stream().filter(i->i.isTook()==false)
-				.map(i->{
-					String url=i.getImage();
-					Path p=Paths.get(url);
-					byte[] bArray=null;
-					try {
-						bArray = Files.readAllBytes(p);
-					}catch (Exception e) {
-						// TODO: handle exception
-					}
-					String photo= Base64.encodeBase64String(bArray);
-					i.setImage(photo);
-					return i;
-				})
-				.collect(Collectors.toList());
+		
+		return l.stream().map(i->{
+			i.setCategory(null);
+			user u=i.getAuthor();
+			i.getAuthor().setId(u.getId());
+			i.getAuthor().setUserName(u.getUserName());
+			i.getAuthor().setLocation(u.getLocation());
+			i.getAuthor().setDate(null);
+			i.getAuthor().setImg(null);
+			i.getAuthor().setPhone(u.getPhone());
+			i.getAuthor().setPassword(null);
+			
+			return i;
+		}).filter(i->i.isTook()==false).collect(Collectors.toList());
 	}
-	*/
+	
 	@PostMapping("/registerUser")
 	public ResponseEntity<?> registerUser(@RequestBody user  u) throws InvalidKeySpecException, NoSuchAlgorithmException{
 	
@@ -170,9 +170,11 @@ public class APIS {
 		userreposiroty.save(u);
 		LoginResponse loginResponse=new LoginResponse();
         loginResponse.setToken(jwtTokenHelper.generateToken(email));
-		return new ResponseEntity<>(loginResponse,HttpStatus.OK);
+        loginResponse.setUsername(u.getUserName());
+		return ResponseEntity.ok(loginResponse);
+	 
 	}
-	
+		
 	@PostMapping(value = "/setUserImage")
 	public ResponseEntity<?> setUserImage(@RequestParam("image") MultipartFile img,@RequestParam("email")String email) throws IllegalStateException, IOException{
 		Optional<user>op=userreposiroty.findByEmail(email);
@@ -191,7 +193,7 @@ public class APIS {
 			@RequestParam("category")String category,@RequestParam("photo1")Optional<MultipartFile> photo1,
 			@RequestParam("photo2")Optional<MultipartFile> photo2 , @RequestParam("photo3")Optional<MultipartFile> photo3
 	) throws Exception{
-		/*
+		
 		item i=new item();
 		i.setName(title);
 		i.setDescription(description);
@@ -202,32 +204,47 @@ public class APIS {
 		itemrepository.save(i);
 		
 		
-		if(photo1.isPresent()) {
-			itemImages images=new itemImages();
-			String url="C:\\project\\itemImages\\"+photo1.get().getOriginalFilename();
-	        File f=new File(url);
-	        photo1.get().transferTo(f);
-	        images.setImage(url);
-	        itemImagesRepository.save(images);
-		}
-		if(photo2.isPresent()) {
-			itemImages images=new itemImages();
-			String url="C:\\project\\itemImages\\"+photo2.get().getOriginalFilename();
-	        File f=new File(url);
-	        photo2.get().transferTo(f);
-	        images.setImage(url);
-	        itemImagesRepository.save(images);
-		}
-		if(photo3.isPresent()) {
-			itemImages images=new itemImages();
-			String url="C:\\project\\itemImages"+photo3.get().getOriginalFilename();
-	        File f=new File(url);
-	        photo3.get().transferTo(f);
-	        images.setImage(url);
-	        itemImagesRepository.save(images);
-		}
-		*/
+		if(photo1.isPresent()) setItemPhoto(photo1.get(),i);
+		if(photo2.isPresent()) setItemPhoto(photo2.get(),i);
+		if(photo3.isPresent()) setItemPhoto(photo3.get(),i);
+
+		
 		return new ResponseEntity<>(HttpStatus.CREATED);
+	}
+	
+	@GetMapping("/getNumberOfPhotosForItem")
+	public int getNumberOfPhotosForItem(@RequestParam("postId")String postId) {
+		return itemImagesRepository.findByI(itemrepository.findById(Integer.parseInt(postId)).get()).size();
+	}
+	
+	@GetMapping(value="/getPostPhotos" , produces = MediaType.IMAGE_JPEG_VALUE)
+	public ResponseEntity<?> getPostPhotos(@RequestParam("postId")String postId,@RequestParam("num")String num) throws Exception{
+		int q=Integer.parseInt(num);
+		List<itemImages> all=itemImagesRepository.findByI(itemrepository.findById(Integer.parseInt(postId)).get());
+		itemImages itemimages=all.get(q);
+		return  ResponseEntity.ok(IOUtils.toByteArray(new FileInputStream(new File(itemimages.getImage()))));
+	}
+	
+	@GetMapping("/getMyDonations")
+	public ResponseEntity<?> getMyDonations(Principal p){
+		user u=userreposiroty.findByEmail(p.getName()).get();
+		return ResponseEntity.ok(itemrepository.findByAuthor(u));
+	}
+	
+	@GetMapping("/getPersonalPageData")
+	public user getPersonalPageData(@RequestParam("q")String userId) {
+		return userreposiroty.findById(Integer.parseInt(userId)).get();
+	}
+	
+	
+	public void setItemPhoto(MultipartFile file,item i) throws Exception{
+		itemImages images=new itemImages();
+		String url="C:\\project\\itemImages\\"+file.getOriginalFilename();
+        File f=new File(url);
+        file.transferTo(f);
+        images.setImage(url);
+        images.setI(i);
+        itemImagesRepository.save(images);
 	}
 	
 	
