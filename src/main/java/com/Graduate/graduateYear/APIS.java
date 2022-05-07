@@ -6,20 +6,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.http.HttpRequest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -34,12 +33,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,6 +50,7 @@ import com.Graduate.graduateYear.tables.user;
 import com.Graduate.graduateYear.tables.userRepository;
 
 import net.minidev.json.JSONObject;
+
 
 
 
@@ -225,6 +223,13 @@ public class APIS {
 		return  ResponseEntity.ok(IOUtils.toByteArray(new FileInputStream(new File(itemimages.getImage()))));
 	}
 	
+	
+	@GetMapping(value="/getUserPhoto",produces = MediaType.IMAGE_JPEG_VALUE)
+	public ResponseEntity<?> getUserPhoto(@RequestParam("id")String id) throws Exception{
+		user u=userreposiroty.findById(Integer.parseInt(id)).get();
+		return ResponseEntity.ok(IOUtils.toByteArray(new FileInputStream(new File(u.getImg()))));
+	}
+	
 	@GetMapping("/getMyDonations")
 	public ResponseEntity<?> getMyDonations(Principal p){
 		user u=userreposiroty.findByEmail(p.getName()).get();
@@ -232,9 +237,26 @@ public class APIS {
 	}
 	
 	@GetMapping("/getPersonalPageData")
-	public user getPersonalPageData(@RequestParam("q")String userId) {
-		return userreposiroty.findById(Integer.parseInt(userId)).get();
+	public JSONObject getPersonalPageData(Principal p) throws FileNotFoundException, IOException {
+		user u=userreposiroty.findByEmail(p.getName()).get();
+		
+		List<item>l=itemrepository.findByAuthor(u);
+		Map<String,Object>m=new HashMap<>();
+		m.put("user", u);
+		m.put("posts", l);
+		m.put("userImage",IOUtils.toByteArray(new FileInputStream(new File(u.getImg()))));
+		JSONObject j=new JSONObject();
+		j.putAll(m);
+		return j;
 	}
+	@PostMapping(value="/updateUserData")
+	public ResponseEntity<?> updateUserData(Principal p,@RequestParam("username")String username,@RequestParam("email")String email,
+			@RequestParam("password")String password,@RequestParam("phone")String phone,
+			@RequestParam("date")Date birthDate,@RequestParam("location")String location){
+		System.out.println(birthDate);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+	
 	
 	
 	public void setItemPhoto(MultipartFile file,item i) throws Exception{

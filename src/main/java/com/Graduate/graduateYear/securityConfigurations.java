@@ -55,7 +55,7 @@ public class securityConfigurations extends WebSecurityConfigurerAdapter{
 				,"/getItemImage","/registerUser"
 				,"/setUserImage","/test"
 				,"/getPostPhotos","/getNumberOfPhotosForItem"
-				,"/getPersonalPageData")
+				,"/getPersonalPageData","/getUserPhoto")
 				.permitAll()
 				.antMatchers(HttpMethod.OPTIONS, "/**").permitAll().anyRequest().authenticated())
 		.addFilterBefore(new JwtAuthenticationFilter(userService, jwtTokenHelper),
